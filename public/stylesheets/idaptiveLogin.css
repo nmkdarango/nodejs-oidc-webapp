@@ -1,0 +1,13 @@
+.container .idaptive-login.custom-background.web-login .login-container {
+    height: 80%;
+    margin-top: 100px;
+}
+
+.container .idaptive-login.custom-background.web-login .logo-wrapper {
+    margin-top: 10px;
+}
+
+.container .idaptive-login.custom-background.web-login .footer.custom 
+{
+    visibility:hidden
+}
