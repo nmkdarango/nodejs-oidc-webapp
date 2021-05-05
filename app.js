@@ -3,8 +3,6 @@ const express = require('express');
 var path = require('path');
 var cookieParser = require('cookie-parser');
 var logger = require('morgan');
-//const passport = require('passport');
-//var dotenv = require('dotenv');
 var indexRouter = require('./routes/index');
 var userRouter = require('./routes/user');
 let stringify = require('json-stringify-safe');
@@ -22,23 +20,22 @@ app.use(express.urlencoded({ extended: false }));
 app.use(cookieParser());
 app.use(express.static(path.join(__dirname, 'public')));
 var mySession = {
-  path: '/',
-  secret: 'MYSECRET',
-  name: 'cyberarkoidcclient',
-  resave: false,
-  saveUninitialized: true,
-  httpOnly: true,
+	path: '/',
+	secret: 'MYSECRET',
+	name: 'cyberarkoidcclient',
+	resave: false,
+	saveUninitialized: true,
+	httpOnly: true,
   secure: false, //for only https
   maxAge: null,
   cookie: {},
 };
 app.use(session(mySession));
-//dotenv.config();
-const authFlow = 'authcode';
 /*Tenant and Resource configurations*/
 //In sync with configuration on Admin Portal
 //make sure to enable CORS in Admin Portal in API Security 
 //Also Add the below in your hosts file to 127.0.0.1 the same as the local host
+const authFlow = 'authcode';
 const appHostUrl = 'http://example.host.com:3000';
 const tenantFqdn = 'example.cyberark.identity.app';
 const app_id = 'TestOIDCClient';
@@ -75,10 +72,10 @@ const cyberArkCss = tenantUrl+cyberArkInternalFileMap+'/css/login.css';
 const cyberArkJs = tenantUrl+cyberArkInternalFileMap+'/login.js';
 /*Passing locals to templates*/
 app.use((req, res, next) => {
-  res.locals.tenantFqdn = tenantFqdn;
-  res.locals.cyberArkCss = cyberArkCss;
-  res.locals.cyberArkJs = cyberArkJs;
-  next();
+	res.locals.tenantFqdn = tenantFqdn;
+	res.locals.cyberArkCss = cyberArkCss;
+	res.locals.cyberArkJs = cyberArkJs;
+	next();
 })
 /*routers*/
 app.use('/', indexRouter);
@@ -86,7 +83,7 @@ app.use('/user', userRouter);
 /*Actual Implementation*/
 Issuer.discover(issuerUrl) // => Promise
 .then(function (cyberarkIssuer) {
-const isAuthCodeFlow = authFlow == 'authcode';
+	const isAuthCodeFlow = authFlow == 'authcode';
 //Initialize Client with the clientid etc. to be able to use the further endpoints within the client
 const client = new cyberarkIssuer.Client({
 	client_id: client_id,
@@ -100,7 +97,7 @@ const client = new cyberarkIssuer.Client({
 const authUrl = client.authorizationUrl({
 	scope: scope,
 	redirect_uri: redirect_uri,
-    ...(isAuthCodeFlow) && {code_challenge: code_challenge},
+	...(isAuthCodeFlow) && {code_challenge: code_challenge},
 	...(isAuthCodeFlow) && {code_challenge_method: code_challenge_method},
 	...(!isAuthCodeFlow) && {nonce: nonce},
 	...(!isAuthCodeFlow) && {response_mode: response_mode_implicit_hybrid_flows},
@@ -111,23 +108,23 @@ const authUrl = client.authorizationUrl({
 app.all(post_authorize_redirect, (req,res,next) => {
 	const params = client.callbackParams(req);
 	client.callback(redirect_uri, params, {
-	...(isAuthCodeFlow) && {code_verifier: code_verifier},
-	...(!isAuthCodeFlow) && {nonce: nonce},
-	responseType: response_types[authFlow],
-	state: currentState
+		...(isAuthCodeFlow) && {code_verifier: code_verifier},
+		...(!isAuthCodeFlow) && {nonce: nonce},
+		responseType: response_types[authFlow],
+		state: currentState
 	}) // => Promise
-	  .then(function (tokenSet) {
-	  	req.session.sessionTokens = tokenSet;
-	  	req.session.claims = tokenSet.claims();
+	.then(function (tokenSet) {
+		req.session.sessionTokens = tokenSet;
+		req.session.claims = tokenSet.claims();
 	  }) // => Promise
-	  	.then(function() {
-	  		client.userinfo(req.session.sessionTokens.access_token)
-	  		.then(function (userinfo) {
-			  	req.session.user = userinfo;
-				  }).then(function (userinfo) {
-				  res.redirect('/');
-			 });
-	  	});
+	.then(function() {
+		client.userinfo(req.session.sessionTokens.access_token)
+		.then(function (userinfo) {
+			req.session.user = userinfo;
+		}).then(function (userinfo) {
+			res.redirect('/');
+		});
+	});
 });
 
 //callback methods to land on post auth
@@ -138,12 +135,12 @@ app.get(resource_urlPath, (req,res,next) => {
 //Primary logout method
 app.get('/logout', function(req, res, next) {
 	if(req.session.sessionTokens.access_token) {
-	  	const logoutUrl = client.endSessionUrl({
-		    post_logout_redirectUri: post_logout_redirectUrl,
-		    token: req.session.sessionTokens.access_token,
-		    token_type_hint: 'access_token'
-	  	});
-	  	res.redirect(logoutUrl);
+		const logoutUrl = client.endSessionUrl({
+			post_logout_redirectUri: post_logout_redirectUrl,
+			token: req.session.sessionTokens.access_token,
+			token_type_hint: 'access_token'
+		});
+		res.redirect(logoutUrl);
 	}
 });
 
