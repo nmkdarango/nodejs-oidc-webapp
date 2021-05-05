@@ -1,15 +1,16 @@
-    function successHandler(data) {
-        console.log("success handler");
-        alert("Hello");
-        window.location.replace('/login/callback');
-      }
+//Use successHandler and failureHandler if we need to receive a callback to separate function
+    // function successHandler(data) {
+    //     console.log("success handler");
+    //     alert("Hello");
+    //     window.location.replace('/login/callback');
+    //   }
    
-      function failureHandler(data) {
-        console.log("failure handler");
-        //alert("Login failed!!")
-      }
+    //   function failureHandler(data) {
+    //     console.log("failure handler");
+    //     //alert("Login failed!!")
+    //   }
 
-     function initLoginWidget() {
+     function initializeLoginWidget(tenantFqdn) {
         document.addEventListener('DOMContentLoaded', function () {
         LaunchLoginView({
         "success": "loginSuccess",
@@ -20,10 +21,10 @@
         "allowRememberMe": true,
         "allowRegister": true,
         "allowForgotUsername": false,
-        "apiFqdn": "abc0123-kcv.my.localdev.idaptive.app",
-        //"appKey": "781576a4-c86c-4f48-bc68-c80a0e137189",
-        "success": successHandler,
-        "failure": failureHandler
+        "apiFqdn": tenantFqdn,
+        "appKey": "7f9e43f6-8820-458d-92c6-83ce338ca208"
+        //"success": successHandler,
+        //"failure": failureHandler
         });
         });
     }

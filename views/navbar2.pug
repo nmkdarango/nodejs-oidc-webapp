@@ -18,12 +18,12 @@ html(lang='en')
       crossorigin="anonymous"
     )
     link(href='/navbar-top.css', rel='stylesheet')
-    link(rel='stylesheet' type='text/css' href='https://abc0123-kcv.my.localdev.idaptive.app/vfslow/lib/uibuild/standalonelogin/css/login.css')
-    script(src='https://abc0123-kcv.my.localdev.idaptive.app/vfslow/lib/uibuild/standalonelogin/login.js')
+    link(rel='stylesheet' type='text/css' href=cyberArkCss)
+    script(src=cyberArkJs)
     script(src='/javascripts/loginwidget.js')
     
     script(type='text/javascript').
-      initLoginWidget();
+      initializeLoginWidget("#{tenantFqdn}");
 
   body
     nav.navbar.navbar-expand-md.navbar-dark.bg-dark.mb-4
@@ -44,7 +44,7 @@ html(lang='en')
               span.sr-only
           if (content == null || !content.user)
             li.nav-item.active
-                a.nav-link(href='/redirectLogin') Redirect Login
+                a.nav-link(href='/redirectLogin') CyberArk Hosted Login
             li.nav-item
                 a.nav-link(href='/loginwidget') Embedded Login
           else

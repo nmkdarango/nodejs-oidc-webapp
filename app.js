@@ -33,36 +33,33 @@ var mySession = {
   cookie: {},
 };
 app.use(session(mySession));
-app.use('/', indexRouter);
-app.use('/user', userRouter);
 //dotenv.config();
 const authFlow = 'authcode';
-const isAuthCodeFlow = authFlow == 'authcode';
 /*Tenant and Resource configurations*/
 //In sync with configuration on Admin Portal
 //make sure to enable CORS in Admin Portal in API Security 
 //Also Add the below in your hosts file to 127.0.0.1 the same as the local host
-const appHostUrl = 'http://toyotafinancialnew.com:3000';
-const tenantUrl = 'https://abc0123-kcv.my.localdev.idaptive.app';
+const appHostUrl = 'http://example.host.com:3000';
+const tenantFqdn = 'example.cyberark.identity.app';
 const app_id = 'TestOIDCClient';
-const client_id = 'ff7df88b-6cc1-4517-8a8a-dac7c769dafd';
+const client_id = '7f9e43f6-8820-458d-92c6-83ce338ca208';
 const client_secret = 'mysecret';
 const post_authorize_redirect= '/postauthorize';//configure this in authorized web app redirect uris
 const post_logout_callback = '/logout/callback';
 const resource_urlPath = '/resourceUrl';//If follow resourcUrl approach, configure in web app on Admin
 
-
 /*parameters required for invoking the client library*/
 const { Issuer, generators } = require('openid-client');
+const tenantUrl = 'https://'+tenantFqdn;
 const issuerUrl = tenantUrl+'/'+app_id+'/';
 const redirect_uri = appHostUrl+post_authorize_redirect;
 const post_logout_redirectUrl = [appHostUrl+post_logout_callback];
 //scope
 const scope = ['openid email profile'];
 //response types
-const response_types_auth_code_flow = ['code'];
-const response_types_implicit_flow = ['id_token token'];
-const response_types_hybrid_flow = ['code id_token token'];
+const response_types_auth_code_flow = 'code';
+const response_types_implicit_flow = 'id_token token';
+const response_types_hybrid_flow = 'code id_token token';
 const response_types = {"authcode":response_types_auth_code_flow,"implicit":response_types_implicit_flow,"hybrid":response_types_hybrid_flow};
 //response modes
 const response_mode_implicit_hybrid_flows = 'form_post';
@@ -72,17 +69,30 @@ var code_verifier = generators.codeVerifier();
 var code_challenge = generators.codeChallenge(code_verifier);
 const code_challenge_method = 'S256';
 const currentState = '123abc';
-
+//for styling and scripting for embedded login flow
+const cyberArkInternalFileMap = '/vfslow/lib/uibuild/standalonelogin';
+const cyberArkCss = tenantUrl+cyberArkInternalFileMap+'/css/login.css';
+const cyberArkJs = tenantUrl+cyberArkInternalFileMap+'/login.js';
+/*Passing locals to templates*/
+app.use((req, res, next) => {
+  res.locals.tenantFqdn = tenantFqdn;
+  res.locals.cyberArkCss = cyberArkCss;
+  res.locals.cyberArkJs = cyberArkJs;
+  next();
+})
+/*routers*/
+app.use('/', indexRouter);
+app.use('/user', userRouter);
 /*Actual Implementation*/
 Issuer.discover(issuerUrl) // => Promise
 .then(function (cyberarkIssuer) {
-
+const isAuthCodeFlow = authFlow == 'authcode';
 //Initialize Client with the clientid etc. to be able to use the further endpoints within the client
 const client = new cyberarkIssuer.Client({
 	client_id: client_id,
 	client_secret: client_secret,
-	redirect_uris: redirect_uri,
-	response_types: response_types[authFlow],
+	redirect_uris: [redirect_uri],
+	response_types: [response_types[authFlow]],
 	post_logout_redirect_uris: post_logout_redirectUrl
   }); // => Client
 
@@ -152,32 +162,8 @@ app.get('/redirectLogin', (req,res,next) => {
 
 //used to show loginwidget
 app.get('/loginwidget', (req,res,next) => {
-	//var strAuthUrl = authUrl.replace(tenantUrl,'');
-	//var encodedUrlPath = encodeURIComponent(strAuthUrl.substring(1,strAuthUrl.length));
-	//res.redirect('/loginwidget/home?cloudRedirect='+encodedUrlPath);
 	res.render('navbar2', {"content":{"user":null,"loginStatus":false,"action": 'loginwidget'}});//, "authUrl": encodedUrlPath}});
 });
-
-//used to show loginwidget
-// app.get('/loginwidget/home', (req,res,next) => {
-// 	console.log("LOGIN WIDGET HOME CALLED HERE");
-// 	res.render('navbar2', {"content":{"user":null,"loginStatus":false,"action": 'loginwidget'}});
-// });
-
-//used if have any postauth callback case
-// app.post('/postauth/callback', (req,res,next) => {
-// 	console.log("post auth post callback successfully called");
-// 	res.end();
-// 	  //next();
-// });
-
-// //used if have any postauth callback case
-// app.get('/postauth/callback', (req,res,next) => {
-// 	console.log("get post auth get callback successfully called");
-// 	res.end();
-// 	  //next();
-// });
-
 
 // catch 404 and forward to error handler
 app.use(function(req, res, next) {
@@ -195,26 +181,4 @@ app.use(function(err, req, res, next) {
   res.render('error');
 });
 });
-
-
-//event handlers
-
-
-// app.get('/userinfo', (req,res,next) => {
-// 	res.render('navbar2', {"content":{"user":req.session.user,"loginStatus":true,"action": 'userinfo',"sessionTokens":req.session.sessionTokens}});
-// });
-
-
-
-// app.get('/loginwidget/home', (req,res,next) => {
-// 	// if(user) {
-// 	// 	console.log("sending some user..");
-// 	// 	res.render('navbar2', {"content":{"user":user},"action":"login"});
-// 	// }
-// 	// else {
-// 		console.log("sending no content..");
-// 		res.render('navbar2', {"content":null});
-// 	//}
-// });
-
 module.exports = app;
