@@ -63,9 +63,7 @@ html(lang='en')
         h1 NodeJs OIDC Client
         p.lead
           | Experience the secure and flexible OIDC authentication process
-        if (content == null)
-          a.btn.btn-lg.btn-primary(href='/login', role='button') Click Here to Redirect Login »
-        else if(content.user)
+        if (content != null && content.user)
           b You are now logged in as #{content.user.name}...
           p
           p

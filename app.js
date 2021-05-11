@@ -1,15 +1,22 @@
-const createError = require('http-errors');
-const express = require('express');
+var createError = require('http-errors');
+var express = require('express');
 var path = require('path');
 var cookieParser = require('cookie-parser');
 var logger = require('morgan');
 var indexRouter = require('./routes/index');
 var userRouter = require('./routes/user');
-let stringify = require('json-stringify-safe');
-const session = require('express-session');
-const querystring = require('querystring');
+var stringify = require('json-stringify-safe');
+var session = require('express-session');
+var querystring = require('querystring');
+var dotenv = require('dotenv');
 
 /*Express App configuration*/
+dotenv.config();
+const result = dotenv.config();
+if (result.error) {
+  throw result.error;
+}
+
 var app = express();
 // view engine setup
 app.set('views', path.join(__dirname, 'views'));
@@ -26,24 +33,24 @@ var mySession = {
 	resave: false,
 	saveUninitialized: true,
 	httpOnly: true,
-  secure: false, //for only https
-  maxAge: null,
-  cookie: {},
+  	secure: false, //for only https
+  	maxAge: null,
+  	cookie: {},
 };
 app.use(session(mySession));
 /*Tenant and Resource configurations*/
 //In sync with configuration on Admin Portal
 //make sure to enable CORS in Admin Portal in API Security 
 //Also Add the below in your hosts file to 127.0.0.1 the same as the local host
-const authFlow = 'authcode';
-const appHostUrl = 'http://example.host.com:3000';
-const tenantFqdn = 'example.cyberark.identity.app';
-const app_id = 'TestOIDCClient';
-const client_id = '7f9e43f6-8820-458d-92c6-83ce338ca208';
-const client_secret = 'mysecret';
-const post_authorize_redirect= '/postauthorize';//configure this in authorized web app redirect uris
-const post_logout_callback = '/logout/callback';
-const resource_urlPath = '/resourceUrl';//If follow resourcUrl approach, configure in web app on Admin
+const authFlow = process.env.AUTH_FLOW;
+const appHostUrl = process.env.APP_HOST_URL;
+const tenantFqdn = process.env.TENANT_FQDN;
+const app_id = process.env.APP_ID;
+const client_id = process.env.CLIENT_ID;
+const client_secret = process.env.CLIENT_SECRET;
+const post_authorize_redirect= process.env.POST_AUTHORIZE_CALLBACK;//configure this in authorized web app redirect uris
+const post_logout_callback = process.env.POST_LOGOUT_CALLBACK;
+const resource_urlPath = process.env.RESOURCE_URL;//If follow resourcUrl approach, configure in web app on Admin
 
 /*parameters required for invoking the client library*/
 const { Issuer, generators } = require('openid-client');
