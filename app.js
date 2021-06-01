@@ -45,7 +45,7 @@ app.use(session(mySession));
 const authFlow = process.env.AUTH_FLOW;
 const appHostUrl = process.env.APP_HOST_URL;
 const tenantFqdn = process.env.TENANT_FQDN;
-const app_id = process.env.APP_ID;
+const issuerUrl = process.env.ISSUER_URL;
 const client_id = process.env.CLIENT_ID;
 const client_secret = process.env.CLIENT_SECRET;
 const post_authorize_redirect= process.env.POST_AUTHORIZE_CALLBACK;//configure this in authorized web app redirect uris
@@ -55,7 +55,6 @@ const resource_urlPath = process.env.RESOURCE_URL;//If follow resourcUrl approac
 /*parameters required for invoking the client library*/
 const { Issuer, generators } = require('openid-client');
 const tenantUrl = 'https://'+tenantFqdn;
-const issuerUrl = tenantUrl+'/'+app_id+'/';
 const redirect_uri = appHostUrl+post_authorize_redirect;
 const post_logout_redirectUrl = [appHostUrl+post_logout_callback];
 //scope
@@ -114,24 +113,34 @@ const authUrl = client.authorizationUrl({
 //post-auth: The callback method from redirect flow lands here because this is the redirect_uri provided in teh authorization endpoint
 app.all(post_authorize_redirect, (req,res,next) => {
 	const params = client.callbackParams(req);
-	client.callback(redirect_uri, params, {
-		...(isAuthCodeFlow) && {code_verifier: code_verifier},
-		...(!isAuthCodeFlow) && {nonce: nonce},
-		responseType: response_types[authFlow],
-		state: currentState
-	}) // => Promise
-	.then(function (tokenSet) {
-		req.session.sessionTokens = tokenSet;
-		req.session.claims = tokenSet.claims();
-	  }) // => Promise
-	.then(function() {
-		client.userinfo(req.session.sessionTokens.access_token)
-		.then(function (userinfo) {
-			req.session.user = userinfo;
-		}).then(function (userinfo) {
-			res.redirect('/');
+	if(params.error) {
+		res.locals.error = params.error;
+		res.locals.error_description = params.error_description;
+		req.session.destroy(function(err) {
+			console.log("Destroyed the session");
+			res.render('customerror');
 		});
-	});
+	}
+	else {
+		client.callback(redirect_uri, params, {
+			...(isAuthCodeFlow) && {code_verifier: code_verifier},
+			...(!isAuthCodeFlow) && {nonce: nonce},
+			responseType: response_types[authFlow],
+			state: currentState
+		}) // => Promise
+		.then(function (tokenSet) {
+			req.session.sessionTokens = tokenSet;
+			req.session.claims = tokenSet.claims();
+		  }) // => Promise
+		.then(function() {
+			client.userinfo(req.session.sessionTokens.access_token)
+			.then(function (userinfo) {
+				req.session.user = userinfo;
+			}).then(function (userinfo) {
+				res.redirect('/');
+			});
+		});
+	}
 });
 
 //callback methods to land on post auth
